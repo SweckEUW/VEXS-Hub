@@ -1,5 +1,7 @@
 <template>
-  <FlowPipeEditor v-if="!isLoading" :flowpipe-json="graph!.flowpipe_graph" :save-handler="handleSave" />
+  <div style="width: 100%; height: 100%;">
+    <FlowPipeEditor style="width: 100%; height: 100%;" v-if="!isLoading" :flowpipe-json="graph!.flowpipe_graph" :save-handler="handleSave" />
+  </div>
 </template>
 
 <script setup lang="ts">
