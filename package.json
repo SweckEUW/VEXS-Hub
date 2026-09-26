@@ -9,12 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@primevue/themes": "^4.5.4",
+    "@primeuix/themes": "^3.0.1",
     "axios": "^1.20.0",
-    "flowpipe-web-editor": "file:.yalc/flowpipe-web-editor",
+    "flowpipe-web-editor": "file:../Flowpipe-Stuff/flowpipe-web-editor",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.5",
-    "vue": "^3.5.34"
+    "vue": "^3.5.34",
+    "vue-router": "^4.6.4",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

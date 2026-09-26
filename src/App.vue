@@ -1,62 +1,33 @@
 <template>
-  <div style="width: 100%; height: 100%;">
-    <FlowPipeEditor 
-      v-if="!isLoading" 
-      :flowpipeJson="graph!.flowpipe_graph" 
-      :flowpipeNodes="nodes"
-      :saveHandler="handleSave" 
-    />
+  <div class="flex h-full w-full overflow-hidden">
+    <AppSidebar v-if="!route.meta.hideSidebar" />
+    <main class="h-full min-w-0 flex-1 overflow-hidden">
+      <RouterView />
+    </main>
   </div>
+
+  <Toast />
 </template>
 
 <script setup lang="ts">
-import { FlowPipeEditor, FlowPipeGraph, FlowpipeNode } from 'flowpipe-web-editor'
-import { getGraphById, updateGraph, executeGraph } from './api/graph.api';
-import { getNodes } from './api/nodes.api';
-import { ref } from 'vue';
+import { RouterView, useRoute } from 'vue-router';
+import AppSidebar from '@/components/AppSidebar.vue';
+import Toast from 'primevue/toast';
 
-let isLoading = ref(true);
-
-let graphID = 68;
-let graph: FlowPipeGraph | undefined = undefined;
-let nodes: FlowpipeNode[] = [];
-
-let loadFlowpipeData = async () => {
-  console.log("Loading FlowPipe data for graph ID:", graphID);
-
-  graph = await getGraphById(graphID);
-  nodes = await getNodes();
-
-  console.log('Loaded graph:', graph);
-  console.log('Loaded nodes:', nodes);
-
-  isLoading.value = false;  
-};
-loadFlowpipeData();
-
-let handleSave = async (flowpipeJson: string) => {
-  // Safe Graph
-  console.log('Event from FlowPipeEditor - Save - Updating graph');
-  graph!.name = "Update " + new Date().toLocaleString('de-DE');
-  graph!.flowpipe_graph = flowpipeJson;
-  let updatedGraph = await updateGraph(graphID, graph!);
-  console.log('Updated graph:', updatedGraph);
-
-  // Execute Graph
-  console.log('Executing graph');
-  let executionResult = await executeGraph(graphID);
-  console.log('Execution result:', executionResult);
-};
+const route = useRoute();
 </script>
 
 <style>
+  /* Inter Google Fonts */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
   html, body, #app {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: "Inter";
     font-size: 13px;
     background: #1a1a1a;
     color: #cccccc;

@@ -7,13 +7,22 @@ export default defineConfig({
   plugins: [vue(), tailwindcss()],
   resolve: {
     alias: {
-      'flowpipe-web-editor': path.resolve(__dirname, '../Flowpipe-Stuff/flowpipe-web-editor/src/index.ts')
-    }
+      '@': path.resolve(__dirname, 'src')
+    },
+    // Die Library ist per file:-Dependency verlinkt und bringt eigene node_modules mit -
+    // ohne dedupe laufen zwei Vue-Instanzen im Browser.
+    dedupe: ['vue', 'primevue']
+  },
+  // Verlinktes Paket nicht vorbuendeln, sonst friert Vite einen alten
+  // build:watch-Stand im optimizeDeps-Cache ein.
+  optimizeDeps: {
+    exclude: ['flowpipe-web-editor']
   },
   server: {
     fs: {
       allow: [
         '..',
+        // Vite muss durch den Symlink hinaus lesen duerfen.
         path.resolve(__dirname, '../Flowpipe-Stuff/flowpipe-web-editor')
       ]
     }

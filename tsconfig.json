@@ -7,7 +7,15 @@
     "strict": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      // Die Library ist per file:-Dependency verlinkt und bringt eigene node_modules mit.
+      // Ohne diese Mappings sieht TS zwei verschiedene Vue-/PrimeVue-Typwelten.
+      "vue": ["./node_modules/vue"],
+      "primevue/*": ["./node_modules/primevue/*"]
+    }
   },
   "include": ["src/**/*", "src/**/*.vue"]
 }

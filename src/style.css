@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+@theme {
+  --color-surface-900: #111111;
+  --color-surface-800: #1a1a1a;
+  --color-surface-700: #222222;
+  --color-surface-600: #2d2d2d;
+  --color-surface-500: #3d3d3d;
+  --color-surface-400: #555555;
+  --color-surface-300: #888888;
+  --color-surface-200: #aaaaaa;
+  --color-surface-100: #cccccc;
+
+  --color-accent: #4d7cfe;
+}
