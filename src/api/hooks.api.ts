@@ -1,9 +1,9 @@
 import { apiClient } from './client';
 import { SerializedFlowpipeGraph } from 'flowpipe-web-editor';
 
-const VEXS_GRAPH_API_BASE_URL = '/api/v1/vexsgraphs/';
+const VEXS_HOOKS_CONNECTIONS_API_BASE_URL = '/api/v1/vexsgraphs/';
 
-export interface VexsGraph {
+export interface Hook {
   id: number;
   name: string;
   description?: string;
@@ -17,7 +17,7 @@ export type VexsGraphUpdate = Partial<VexsGraphCreate>;
 
 // Fetch all FlowPipe graphs for a project
 export async function getGraphs(): Promise<VexsGraph[]> {
-  const response = await apiClient.get<VexsGraph[]>(VEXS_GRAPH_API_BASE_URL);
+  const response = await apiClient.get<VexsGraph[]>(GRAPH_API_BASE_URL);
 
   if (!response.data) throw new Error('Graphs not found');
 
@@ -25,7 +25,7 @@ export async function getGraphs(): Promise<VexsGraph[]> {
 }
 
 export async function getGraphById(id: number): Promise<VexsGraph> {
-  const response = await apiClient.get<VexsGraph>(VEXS_GRAPH_API_BASE_URL + `${id}/`);
+  const response = await apiClient.get<VexsGraph>(GRAPH_API_BASE_URL + `${id}/`);
 
   if (!response.data) throw new Error('Graphs not found');
 
@@ -34,21 +34,21 @@ export async function getGraphById(id: number): Promise<VexsGraph> {
 
 export async function createGraph(graph: VexsGraphCreate): Promise<VexsGraph> {
   console.log('Creating graph:', graph);
-  const response = await apiClient.post<VexsGraph>(VEXS_GRAPH_API_BASE_URL, graph);
+  const response = await apiClient.post<VexsGraph>(GRAPH_API_BASE_URL, graph);
   return response.data;
 }
 
 export async function updateGraph(id: number, graph: VexsGraphUpdate): Promise<VexsGraph> {
-  const response = await apiClient.put<VexsGraph>(VEXS_GRAPH_API_BASE_URL + `${id}/`, graph);
+  const response = await apiClient.put<VexsGraph>(GRAPH_API_BASE_URL + `${id}/`, graph);
   return response.data;
 }
 
 export async function deleteGraph(id: number): Promise<boolean> {
-  const response = await apiClient.delete(VEXS_GRAPH_API_BASE_URL + `${id}/`);
+  const response = await apiClient.delete(GRAPH_API_BASE_URL + `${id}/`);
   return response.data;
 }
 
 export async function executeGraph(id: number): Promise<any> {
-  const response = await apiClient.post(VEXS_GRAPH_API_BASE_URL + `${id}/execute/`);
+  const response = await apiClient.post(GRAPH_API_BASE_URL + `${id}/execute/`);
   return response.data;
 }
