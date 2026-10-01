@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import GraphsView from '@/views/GraphsView.vue'
-import HooksView from '@/views/HooksView.vue'
+import HooksConnectionView from '@/views/HooksConnectionView.vue'
 import HistoryView from '@/views/HistoryView.vue'
 
 declare module 'vue-router' {
@@ -38,7 +38,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/hooks',
     name: 'hooks',
-    component: HooksView,
+    component: HooksConnectionView,
     meta: { title: 'Hooks', icon: 'pi pi-link', nav: true }
   },
   {
