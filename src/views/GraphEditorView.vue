@@ -48,20 +48,21 @@ import Breadcrumb from 'primevue/breadcrumb';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
 import { FlowPipeEditor } from 'flowpipe-web-editor';
-import type { SerializedFlowpipeGraph, SerializedFlowpipeNode } from 'flowpipe-web-editor';
-import { getGraphById, updateGraph, executeGraph, type VexsGraph } from '@/api/graph.api';
-import { getNodes } from '@/api/nodes.api';
-import { useToast } from 'primevue';
+import type { SerializedFlowpipeGraph } from 'flowpipe-web-editor';
+import type { VexsGraph } from '@/api/graph.api';
+import { useToast } from 'primevue/usetoast';
+import { useVexsApi } from '@/composables/useVexsApi';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const { nodes, errors, fetchGraph, loadNodes, updateGraph, executeGraph } = useVexsApi();
 
 const graphID = ref(0);
 const vexsGraph = ref<VexsGraph | undefined>(undefined);
-const nodes = ref<SerializedFlowpipeNode[]>([]);
 const isLoading = ref(true);
-const error = ref<string | null>(null);
+const graphError = ref<string | null>(null);
+const error = computed(() => graphError.value ?? errors.nodes);
 
 // Graphs / <graph name> - falls back to the ID while the graph is still loading
 const breadcrumbItems = computed(() => [
@@ -73,17 +74,17 @@ const loadFlowpipeData = async (id: number) => {
   console.log('Loading FlowPipe data for graph ID:', id);
 
   isLoading.value = true;
-  error.value = null;
+  graphError.value = null;
 
   try {
-    vexsGraph.value = await getGraphById(id);
-    nodes.value = await getNodes();
+    // Graph is always fetched fresh, the node library is cached
+    vexsGraph.value = await fetchGraph(id);
+    await loadNodes();
 
     console.log('Loaded graph:', vexsGraph.value);
-    console.log('Loaded nodes:', nodes.value);
   } catch (e) {
     console.error('Failed to load FlowPipe data:', e);
-    error.value = `Graph ${id} konnte nicht geladen werden.`;
+    graphError.value = `Graph ${id} konnte nicht geladen werden.`;
   } finally {
     isLoading.value = false;
   }
@@ -102,10 +103,10 @@ watch(
 const handleSave = async (serializedFlowpipeGraph: SerializedFlowpipeGraph) => {
   console.log('Event from FlowPipeEditor - Save - Updating graph');
 
-  vexsGraph.value!.flowpipe_graph = serializedFlowpipeGraph;
-
   try {
-    const updatedGraph = await updateGraph(graphID.value, vexsGraph.value!);
+    // Don't mutate the cached graph before the save succeeded
+    const updatedGraph = await updateGraph(graphID.value, { ...vexsGraph.value!, flowpipe_graph: serializedFlowpipeGraph });
+    vexsGraph.value = updatedGraph;
     toast.add({ severity: 'success', summary: 'Graph updated', detail: `Graph ${updatedGraph.name} has been updated.`, life: 3000 });
 
     console.log('Updated graph:', updatedGraph);
@@ -119,11 +120,10 @@ const handleSave = async (serializedFlowpipeGraph: SerializedFlowpipeGraph) => {
 const handleRun = async (serializedFlowpipeGraph: SerializedFlowpipeGraph) => {
   console.log('Event from FlowPipeEditor - Run - Executing graph');
 
-  // First Safe Graph
-  vexsGraph.value!.flowpipe_graph = serializedFlowpipeGraph;
-
   try {
-    const updatedGraph = await updateGraph(graphID.value, vexsGraph.value!);
+    // First Save Graph
+    const updatedGraph = await updateGraph(graphID.value, { ...vexsGraph.value!, flowpipe_graph: serializedFlowpipeGraph });
+    vexsGraph.value = updatedGraph;
     toast.add({ severity: 'success', summary: 'Graph updated', detail: `Graph ${updatedGraph.name} has been updated.`, life: 3000 });
 
     // Then Execute Graph

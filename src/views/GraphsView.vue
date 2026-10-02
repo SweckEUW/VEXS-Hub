@@ -4,7 +4,7 @@
   <CreateGraphDialog v-model:visible="showCreateDialog" />
 
   <!-- Overlay Menu for Graph Actions: Delete, Run, ... -->
-  <Menu ref="menu" id="overlay_menu" :model="items" :popup="true" />
+  <Menu ref="menu" id="overlay_menu" :model="items" :popup="true" :pt="{ submenuLabel: { style: 'padding: 0' } }" :dt="{ item: { padding: '0.75rem 1rem' } }"/>
 
   <!-- Actual Graphs Display -->
   <div class="h-full overflow-auto p-6">
@@ -21,18 +21,13 @@
       {{ error }}
     </Message>
 
-    <DataTable
-      :value="graphs"
-      :loading="isLoading"
-      data-key="id"
-      row-hover
-    >
+    <DataTable :value="graphs" :loading="isLoading" data-key="id" row-hover :dt="{ bodyCell: { padding: '2rem 1rem' } }">
       <template #empty>
-        <span class="text-surface-300">Keine Graphen vorhanden.</span>
+        <span v-if="!isLoading" class="text-surface-300">Keine Graphen vorhanden.</span>
       </template>
 
       <!-- Name -->
-      <Column header="GRAPH" >
+      <Column header="GRAPH" style="width: 200px" >
         <template #body="{ data } : { data: VexsGraph }">
           <div class="flex-col gap-2">
             <div class="text-l font-bold">{{ data.name }}</div>
@@ -42,7 +37,20 @@
       </Column>
 
       <!-- Used In Hooks -->
-      <Column header="USED IN" />
+      <Column header="USED IN HOOKS">
+        <template #body="{ data } : { data: VexsGraph }">
+          <div class="flex flex-col gap-2">
+            <div v-for="connection in getHookConnectionsForGraph(data.id)" :key="connection.id" class="text-nowrap block bg-surface-500 p-2 rounded-md flex items-center gap-2">
+              <i :class="'pi pi-' + getHookById(connection.hook_id)?.icon"/>
+              <div>{{ getHookById(connection.hook_id)?.name }}</div>
+            </div>
+          </div>
+          <div v-if="getHookConnectionsForGraph(data.id).length === 0" class="text-surface-300 outline-[1px] rounded-md p-4 outline-dotted">
+            <i :class="'pi pi-asterisk'"/>
+            <span class="ml-2">Not used in any hook</span>
+          </div>
+        </template>
+      </Column>
 
       <!-- Created At -->
       <Column header="CREATED" >
@@ -65,7 +73,7 @@
       <Column header="ACTIONS" :pt="{ columnHeaderContent: { class: 'justify-end' } }">
         <template #body="{ data }: { data: VexsGraph }">
           <div class="flex justify-end gap-2">
-            <Button label="Open in Editor" icon="pi pi-pencil" severity="secondary" outlined @click.stop="openGraph(data.id)" />
+            <Button class="min-w-[150px]" label="Open in Editor" icon="pi pi-pencil" severity="secondary" outlined @click.stop="openGraph(data.id)" />
             <Button
               type="button"
               icon="pi pi-ellipsis-v"
@@ -84,56 +92,52 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, useTemplateRef } from 'vue';
+import { computed, onMounted, ref, useTemplateRef } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
 import Menu from 'primevue/menu';
 import PageHeader from '@/components/PageHeader.vue';
-import { deleteGraph, executeGraph, getGraphs, type VexsGraph } from '@/api/graph.api';
+import type { VexsGraph } from '@/api/graph.api';
 import type { MenuItem } from 'primevue/menuitem';
 import CreateGraphDialog from '@/components/CreateGraphDialog.vue';
 import { useToast } from 'primevue/usetoast';
 import { useRouter } from "vue-router";
+import { useVexsApi } from '@/composables/useVexsApi';
 
 const router = useRouter();
 const toast = useToast();
+const {
+  graphs, isLoading: loading, errors,
+  loadGraphs, loadHooks, loadHookConnections,
+  deleteGraph, executeGraph, getHookById, getHookConnectionsForGraph
+} = useVexsApi();
 
-const graphs = ref<VexsGraph[]>([]);
-const isLoading = ref(true);
-const error = ref<string | null>(null);
+const isLoading = computed(() => loading.graphs || loading.hooks || loading.hookConnections);
+const error = computed(() => errors.graphs ?? errors.hooks ?? errors.hookConnections);
 const showCreateDialog = ref(false);
 const menu = useTemplateRef('menu')
 const selectedGraph = ref<VexsGraph | null>(null);
 
-const loadGraphs = async () => {
-  isLoading.value = true;
-  error.value = null;
-
-  try {
-    graphs.value = await getGraphs();
-    console.log('Loaded graphs:', graphs.value);
-  } catch (e) {
-    console.error('Failed to load graphs: ', e);
-    error.value = 'Failed to load graphs: ' + (e instanceof Error ? e.message : String(e));
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-onMounted(loadGraphs);
+// Cached - only the first visit triggers requests
+onMounted(async () => {
+  await loadHookConnections();
+  await loadHooks();
+  await loadGraphs();
+});
   
 const items = ref<MenuItem[]>([
   {
-    label: 'Actions',
     items: [
       {
         label: 'Run Test',
         icon: 'pi pi-play',
-        command: () => {
+        command: async () => {
           if (selectedGraph.value) {
-            runGraphFromView(selectedGraph.value);
+            console.log('Run graph:', selectedGraph.value.id);
+            await executeGraph(selectedGraph.value.id);
+            toast.add({ severity: 'success', summary: 'Graph executed', detail: `Graph ${selectedGraph.value.name} has been executed.`, life: 3000 });
           }
         }
       },
@@ -143,6 +147,7 @@ const items = ref<MenuItem[]>([
         command: () => {
           if (selectedGraph.value) {
             deleteGraphFromView(selectedGraph.value);
+            toast.add({ severity: 'success', summary: 'Graph deleted', detail: `Graph ${selectedGraph.value.name} has been deleted.`, life: 3000 });
           }
         }
       }
@@ -166,17 +171,8 @@ const deleteGraphFromView = async (graph: VexsGraph) => {
     return;
   }
 
-  // Show success toast and reload graphs
+  // Show success toast - the graph list is updated by useVexsApi
   toast.add({ severity: 'success', summary: 'Graph deleted', detail: `Graph ${graph.name} has been deleted.`, life: 3000 });
-
-  // Reload graphs
-  await loadGraphs();
-};
-
-const runGraphFromView = async (graph: VexsGraph) => {
-  console.log('Run graph:', graph.id);
-
-  executeGraph(graph.id);
 };
 
 const openGraph = (graphId: number) => {

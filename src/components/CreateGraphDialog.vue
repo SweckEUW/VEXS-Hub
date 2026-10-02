@@ -30,13 +30,15 @@ import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Message from 'primevue/message';
-import { createGraph, type VexsGraphCreate } from '@/api/graph.api';
+import type { VexsGraphCreate } from '@/api/graph.api';
 import { computed, ref } from 'vue';
-import { useToast } from 'primevue';
 import { useRouter } from "vue-router";
+import { useToast } from 'primevue/usetoast';
+import { useVexsApi } from '@/composables/useVexsApi';
 
 const router = useRouter();
 const toast = useToast();
+const { createGraph } = useVexsApi();
 
 const visible = defineModel<boolean>('visible', { default: false });
 

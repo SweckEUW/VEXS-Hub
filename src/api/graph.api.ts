@@ -3,6 +3,22 @@ import { SerializedFlowpipeGraph } from 'flowpipe-web-editor';
 
 const VEXS_GRAPH_API_BASE_URL = '/api/v1/vexsgraphs/';
 
+export type ExecutionMode = 'deadline' | 'local';
+
+export interface DeadlineSubmittedJob {
+  job_id: string;
+  name: string;
+  node_identifiers: string[];
+}
+
+export interface VexsGraphExecutionResponse {
+  mode: ExecutionMode;
+  status: 'success' | 'submitted';   // local: 'success', deadline: 'submitted'
+  submission_id: string | null;
+  batch_name: string | null;
+  jobs: DeadlineSubmittedJob[];
+}
+
 export interface VexsGraph {
   id: number;
   name: string;
@@ -48,7 +64,7 @@ export async function deleteGraph(id: number): Promise<boolean> {
   return response.data;
 }
 
-export async function executeGraph(id: number): Promise<any> {
-  const response = await apiClient.post(VEXS_GRAPH_API_BASE_URL + `${id}/execute/`);
+export async function executeGraph(id: number,mode: ExecutionMode = 'local'): Promise<VexsGraphExecutionResponse> {
+  const response = await apiClient.post<VexsGraphExecutionResponse>(VEXS_GRAPH_API_BASE_URL + `${id}/execute/`, null, { params: { mode } });
   return response.data;
 }
