@@ -29,7 +29,7 @@
         <Message severity="error" :closable="false">{{ error }}</Message>
       </div>
 
-      <FlowPipeEditor
+      <flowpipe-editor
         v-else-if="!isLoading && vexsGraph"
         :graph="vexsGraph.flowpipe_graph"
         :nodeLibrary="nodes"
@@ -47,11 +47,11 @@ import { RouterLink, useRoute, useRouter } from 'vue-router';
 import Breadcrumb from 'primevue/breadcrumb';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
-import { FlowPipeEditor } from 'flowpipe-web-editor';
 import type { SerializedFlowpipeGraph } from 'flowpipe-web-editor';
 import type { VexsGraph } from '@/api/graph.api';
 import { useToast } from 'primevue/usetoast';
 import { useVexsApi } from '@/composables/useVexsApi';
+
 
 const route = useRoute();
 const router = useRouter();
