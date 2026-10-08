@@ -1,29 +1,5 @@
 <template>
   <div class="flex h-full w-full flex-col">
-    <header class="flex h-11 shrink-0 items-center gap-2 border-b border-surface-600 bg-surface-900 px-3">
-      <Button
-        icon="pi pi-arrow-left"
-        severity="secondary"
-        text
-        rounded
-        aria-label="Zurück zur Graph-Übersicht"
-        @click="router.push({ name: 'graphs' })"
-      />
-
-      <Breadcrumb :model="breadcrumbItems" class="bg-transparent! p-0! text-[0.95rem]">
-        <template #item="{ item }">
-          <RouterLink
-            v-if="item.route"
-            :to="item.route"
-            class="text-surface-300 no-underline hover:text-surface-100"
-          >
-            {{ item.label }}
-          </RouterLink>
-          <span v-else class="text-surface-100">{{ item.label }}</span>
-        </template>
-      </Breadcrumb>
-    </header>
-
     <div class="min-h-0 w-full flex-1">
       <div v-if="error" class="p-6">
         <Message severity="error" :closable="false">{{ error }}</Message>
@@ -36,7 +12,32 @@
         :saveHandler="handleSave"
         :runHandler="handleRun"
         :displayDownloadButton="true"
-      />
+      >
+        <div slot="title" class="flex items-center gap-2">
+          <Button
+            icon="pi pi-arrow-left"
+            severity="secondary"
+            text
+            rounded
+            size="small"
+            aria-label="Zurück zur Graph-Übersicht"
+            @click="router.push({ name: 'graphs' })"
+          />
+
+          <Breadcrumb :model="breadcrumbItems" class="bg-transparent! p-0! text-[0.95rem]">
+            <template #item="{ item }">
+              <RouterLink
+                v-if="item.route"
+                :to="item.route"
+                class="text-surface-300 no-underline hover:text-surface-100"
+              >
+                {{ item.label }}
+              </RouterLink>
+              <span v-else class="text-surface-100">{{ item.label }}</span>
+            </template>
+          </Breadcrumb>
+        </div>
+      </flowpipe-editor>
     </div>
   </div>
 </template>
